@@ -142,7 +142,7 @@ namespace mtm {
      *  this group's name is bigger (lexicographic) than rhs's name.
      *  false otherwise.
      */
-    bool operator>(const Group &rhs) const {
+    bool operator>(const Group &rhs) {
         return rhs < *this;
     }
 
