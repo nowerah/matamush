@@ -7,23 +7,28 @@
 #include "Group.h"
 #include <vector>
 #include <memory>
+#include "MtmSet.h"
 
 using std::string;
 using std::shared_ptr;
 using std::map;
 
 namespace mtm{
-    
+
     /**
      * An abstract call of an area in the world.
      * Assume every name is unique.
      * Groups that become empty, should be removed from the area.
      */
     class Area{
-        
-    protected:
 
+    protected:
+        string name;
         std::vector<GroupPointer> groups;
+        MtmSet<string> reachableAreas;
+        const GroupPointer findGroup(const string &group_name) const;
+        Clan& getNewGroupClan(const string &group_name, const string &clan,
+                               map<string, Clan> &clan_map);
 
     public:
         /**
@@ -31,8 +36,8 @@ namespace mtm{
          * @param name The name of the area
          * @throws AreaInvalidArguments If the name is empty
          */
-        explicit Area(const std::string& name);
-        
+        explicit Area(const string& name);
+
         /**
          * Disable copy constructor
          */
@@ -47,7 +52,7 @@ namespace mtm{
          * Destructor
          */
         virtual ~Area();
-        
+
         /**
          * Add an area, that can be reachable from this area.
          * Doesn't mean that this area is reachable from the area with the
@@ -55,8 +60,8 @@ namespace mtm{
          * @param area_name The name of the area that can be reachable from
          *  this are.
          */
-        void addReachableArea(const std::string& area_name);
-        
+        void addReachableArea(const string& area_name);
+
         /**
          * Check if an area is reachable from this area.
          * An area is always reachable from itself.
@@ -64,8 +69,8 @@ namespace mtm{
          * @return True if the area with the given name is reachable from
          * this area, and false otherwise.
          */
-        bool isReachable(const std::string& area_name) const;
-        
+        bool isReachable(const string& area_name) const;
+
         /**
          * Get a group into the area.
          * @param group_name The name of the group that get into the area.
@@ -82,20 +87,20 @@ namespace mtm{
          */
         virtual void groupArrive(const string& group_name, const string& clan,
                                  map<string, Clan>& clan_map);
-        
+
         /**
          * Get a group out of the area.
          * @param group_name The name of the leaving group.
          * @throws AreaGroupNotFound If there is no group in the area with the
          *  same name;
          */
-        virtual void groupLeave(const std::string& group_name);
-        
+        virtual void groupLeave(const string& group_name);
+
         /**
          * Get a set of the names of all the groups in the area.
          * @return A set that contains the names of all the groups in the area.
          */
-        MtmSet<std::string> getGroupsNames() const;
+        MtmSet<string> getGroupsNames() const;
     };
 } //namespace mtm
 
