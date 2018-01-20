@@ -4,6 +4,8 @@
 #include <string>
 #include <ostream>
 
+//hiiii
+
 namespace mtm{
 
     enum FIGHT_RESULT{
