@@ -4,32 +4,17 @@
 
 namespace mtm{
 
-    bool compareGroups(const Group& group1, const Group& group2);
+    bool compareGroups(const GroupPointer& group1, const GroupPointer& group2);
 
     /**
      * Constructor
      * @param name The name of the new clan, can't be empty
      * @throws ClanEmptyName if name is empty.
      */
-    explicit Clan::Clan(const std::string& name){
+    Clan::Clan(const std::string& name){
         if (name.empty()) throw ClanEmptyName();
         this->name = name;
     }
-
-    /**
-     * Copy constructor.
-     */
-    Clan::Clan(const Clan& other)= default;
-
-    /**
-     * Disable assignment operator
-     */
-    Clan &operator=(const Clan &) = delete;
-
-    /**
-     * Destructor
-     */
-    ~Clan() = default;
 
     /**
      * Add a group (copy of it) to the clan
@@ -43,7 +28,7 @@ namespace mtm{
         if (this->doesContain(group.getName()))
             throw ClanGroupNameAlreadyTaken();
         GroupPointer ptr(new Group(group));
-        groups.insert(ptr);
+        this->groups.push_back(ptr);
         ptr->changeClan(this->name);
     }
 
@@ -55,22 +40,21 @@ namespace mtm{
      * given name.
      */
     const GroupPointer& Clan::getGroup(const std::string& group_name) const{
-        MtmSet::iterator itr = this->groups.begin();
-        for (; itr!=groups.end(); ++itr) {
+        for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
             if ((*itr)->getName() == group_name) {
-                return **itr;
+                return *itr;
             }
         }
         throw ClanGroupNotFound();
     }
 
     bool Clan::doesContain(const std::string& group_name) const{
-        MtmSet::iterator itr = this->groups.begin();
-        for (; itr!=groups.end(); ++itr) {
+        for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
             if ((*itr)->getName() == group_name) {
                 return true;
             }
         }
+        return false;
     }
 
     /**
@@ -81,8 +65,8 @@ namespace mtm{
      */
     int Clan::getSize() const{
         int total_size = 0;
-        for(const GroupPointer& ptr : groups){
-            total_size += ptr->getSize();
+        for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
+            total_size += (*itr)->getSize();
         }
         return total_size;
     }
@@ -116,23 +100,26 @@ namespace mtm{
             }
         }
         if (new_name == this->name){
-            for(const GroupPointer& ptr : other.groups){
-                ptr->changeClan(new_name);
+            for (std::list<GroupPointer>::const_iterator itr = other.groups.begin(); itr!=groups.end(); ++itr){
+                (*itr)->changeClan(new_name);
             }
         }
         else{
-            for(const GroupPointer& ptr : this->groups) {
-                ptr->changeClan(new_name);
+            this->name = new_name;
+            for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
+                (*itr)->changeClan(new_name);
             }
         }
-        for(const GroupPointer& ptr : other.groups){
-            this->addGroup(*ptr);
+        for(std::list<GroupPointer>::const_iterator itr = other.groups.begin()
+                ; itr!=other.groups.end(); ++itr) {
+            this->addGroup(**itr);
         }
-        for(Clan* curr : other.friends){
-            this->makeFriend(*curr);
-            other.removeFriend(*curr);
+        for(MtmSet<Clan*>::const_iterator itr = other.friends.begin(); itr!=other.friends.end(); ++itr) {
+            this->makeFriend(**itr);
+            other.removeFriend(**itr);
         }
         other.clear();
+        return *this;
     }
 
 
@@ -169,7 +156,7 @@ namespace mtm{
     bool Clan::isFriend(const Clan& other) const{
         if (this == &other) return true;
         for(Clan* curr : this->friends){
-            if (curr->isEqual(*this)) return true;
+            if (curr->isEqual(other)) return true;
         }
         return false;
     }
@@ -214,21 +201,23 @@ namespace mtm{
      * @return A reference to the output stream
      */
     std::ostream& operator<<(std::ostream& os, const Clan& clan){
-        MtmSet<GroupPointer> groups_copied(this->groups);
-        std::sort(groups_copied.begin(), groups_copied.end(), compareGroups);
-        std::ostream return_os();
+        std::list<GroupPointer> copied(clan.groups);
+        copied.sort(compareGroups);
         os << "Clan's name: " << clan.name << std::endl
-           << "Clan's Groups:" << std::endl;
+           << "Clan's groups:" << std::endl;
+        for(std::list<GroupPointer>::const_iterator itr = copied.begin(); itr!= copied.end() ; ++itr ){
+            os << (*itr)->getName() << std::endl;
+        }
+        return os;
+    }
 
-
-
+    bool compareGroups(const GroupPointer& group1, const GroupPointer& group2) {
+        if ((*group1) > *(group2)) return true;
+        return false;
     }
 
 
-    bool compareGroups(const Group& group1, const Group& group2) {
-        if (group1 < group2) return true;
 
-    }
 }
 
 

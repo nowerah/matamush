@@ -6,6 +6,7 @@
 #include <ostream>
 #include <memory>
 #include "MtmSet.h"
+#include <list>
 
 namespace mtm{
     
@@ -19,7 +20,7 @@ namespace mtm{
      */
     class Clan{
         std::string name;
-        MtmSet<GroupPointer> groups;
+        std::list<GroupPointer> groups;
         MtmSet<Clan*> friends;
 
 
@@ -27,9 +28,9 @@ namespace mtm{
          * Removes a Clan from the friend set.
          * Only used when the two are friends
          * Note: is asymmetrical
-         * @param friend that should be removed
+         * @param other that should be removed
          */
-        void removeFriend(Clan friend)
+        void removeFriend(Clan other);
 
         /**
          * Clears a clan. makes name empty.
@@ -57,7 +58,7 @@ namespace mtm{
         /**
          * Copy constructor.
          */
-        Clan(const Clan& other);
+        Clan(const Clan& other) = default;
 
         /**
          * Disable assignment operator
@@ -67,7 +68,7 @@ namespace mtm{
         /**
          * Destructor
          */
-        ~Clan();
+        ~Clan() = default;
         
         /**
          * Add a group (copy of it) to the clan
