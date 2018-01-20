@@ -3,8 +3,6 @@
 
 #include "exceptions.h"
 
-#define NULL 0
-
 namespace mtm{
     /**
      * A set
@@ -24,37 +22,51 @@ namespace mtm{
 
         public:
             Node() = default;
-            explicit Node(Type element) : next(NULL), element(element) {
+            explicit Node(Type& element) : next(nullptr), element(element) {
             }
-            Node(const Node& other) : next(NULL), element(other.element) {
+            explicit Node(const Type& element) : next(nullptr), element(element) {
+            }
+            Node(const Node& other) : next(nullptr), element(other.element) {
             }
             ~Node() = default;
-            Node& getNext() const {
-                return *(this->next);
+            Node* getNext() const {
+                return this->next;
             }
-            Type& getElement() const {
+            Type& getElement() {
+                return this->element;
+            }
+            const Type& getElement() const {
                 return this->element;
             }
             Node* setNext(Node* node) {
                 this->next = node;
                 return node;
             }
-            Type& setElement(const Type& element) {
-                this->element = Type(element);
-                return this->element;
-            }
-            bool operator==(const Node&);
+//            Type& setElement(const Type& element) {
+//                this->element = Type(element);
+//                return this->element;
+//            }
+            bool operator==(const Node&rhs) const {
+                return this->element == rhs.element;
+            };
         };
-
-        bool Node::operator==(const Node& rhs) {
-            return this->element == rhs.element;
-        }
 
         /**
          * Properties of class MtmSet
          */
         int set_size;
         Node* head;
+
+        /**
+         * Deletes first node of the set, and updates head to the next node.
+         */
+        void deleteHead() {
+            if (!head) return;
+            Node* new_head = head->getNext();
+            delete head;
+            head = new_head;
+            --set_size;
+        }
     
     public:
         //Forward declaration
@@ -71,7 +83,7 @@ namespace mtm{
              * Empty constructor. Should not be dereferenced.
              * Same as MtmSet::end()
              */
-            iterator() : node(NULL) {
+            iterator() : node(nullptr) {
             }
             
             /**
@@ -85,7 +97,7 @@ namespace mtm{
              * Copy constructor
              * @param it The iterator to copy
              */
-            iterator(const iterator& it) : node(it->node) {
+            iterator(const iterator& it) : node(it.node) {
             }
 
             /**
@@ -139,7 +151,7 @@ namespace mtm{
              */
             iterator& operator++(){
                 if (!node) throw NodeIsEndException();
-                node = &node->getNext();
+                node = node->getNext();
                 return *this;
             }
             
@@ -153,7 +165,7 @@ namespace mtm{
             iterator operator++(int){
                 if (!node) throw NodeIsEndException();
                 iterator old(*this);
-                node = &node->getNext();
+                node = node->getNext();
                 return old;
             }
             
@@ -164,7 +176,7 @@ namespace mtm{
              * @return true if the two iterators point to the same node
              */
             bool operator==(const const_iterator& rhs) const{
-                return this->node == *rhs;
+                return rhs == const_iterator(this->node);
             }
             
             /**
@@ -174,7 +186,7 @@ namespace mtm{
              * @return true if the two iterators don't point to the same node
              */
             bool operator!=(const const_iterator& rhs) const{
-                return this->node != *rhs;
+                return !(*this == rhs);
             }
 
             friend class const_iterator;
@@ -191,7 +203,7 @@ namespace mtm{
              * Empty constructor. Should not be dereferenced.
              * Same as MtmSet::end()
              */
-            const_iterator() : node(NULL) {
+            const_iterator() : node(nullptr) {
             }
             
             /**
@@ -215,6 +227,8 @@ namespace mtm{
              */
             /****************** IGNORE ERROR, IT COMPILES *****************/
             const_iterator(const iterator& it) : node(it.node) {
+                /* We need this to be implicit, to allow comparisons
+                 * of the form "it == set.end()" */
             }
 
             /**
@@ -268,7 +282,7 @@ namespace mtm{
              */
             const_iterator& operator++(){
                 if (!node) throw NodeIsEndException();
-                node = &node->getNext();
+                node = node->getNext();
                 return *this;
             }
             
@@ -282,7 +296,7 @@ namespace mtm{
             const_iterator operator++(int){
                 if (!node) throw NodeIsEndException();
                 const_iterator old(*this);
-                node = &node->getNext();
+                node = node->getNext();
                 return old;
             }
             
@@ -310,22 +324,22 @@ namespace mtm{
          * Empty constructor
          * Creates an empty set
          */
-        MtmSet() : set_size(0), head(NULL) {
+        MtmSet() : set_size(0), head(nullptr) {
         }
         
         /**
          * Copy constructor
          * @param set the Set to copy
          */
-        MtmSet(const MtmSet& set) : set_size(set.set_size), head(NULL) {
-            const_iterator original = set.begin();
-            if (original == set.end()) return;
-            head = new Node(original);
-            iterator current(head);
-            for ( ; original != set.end(); ++original) {
+        MtmSet(const MtmSet& set) : set_size(set.set_size), head(nullptr) {
+            Node* original = set.head;
+            if (!original) return;
+            this->head = new Node(*original);
+            Node* current = this->head;
+            original = original->getNext();
+            for ( ; original; original = original->getNext()) {
                 Node* new_node = new Node(*original);
                 current = current->setNext(new_node);
-                Node node(NULL);
             }
         }
         
@@ -333,7 +347,9 @@ namespace mtm{
          * Destructor
          * Free all allocated memory in the set.
          */
-        ~MtmSet(){}
+        ~MtmSet(){
+            this->clear();
+        }
         
         /**
          * Insert a new element to the set, doesn't insert if there is already
@@ -343,7 +359,22 @@ namespace mtm{
          * @return An iterator to the inserted element, or to the equal
          * element if the element wasn't inserted.
          */
-        iterator insert(const Type& elem){}
+        iterator insert(const Type& elem){
+            if (!head) {
+                head = new Node(elem);
+                set_size = 1;
+                return iterator(head);
+            }
+            Node* current = head;
+            for ( ; current->getNext(); current = current->getNext()) {
+                if (current->getElement() == elem) return iterator(current);
+            }
+            if (current->getElement() == elem) return iterator(current);
+            Node* new_node = new Node(elem);
+            current = current->setNext(new_node);
+            ++set_size;
+            return iterator(current);
+        }
         
         /**
          * Remove an element from the set. If there is no element equal to
@@ -351,45 +382,73 @@ namespace mtm{
          * If an element wasn't removed, all iterators should stay valid.
          * @param elem the element to remove.
          */
-        void erase(const Type& elem){}
+        void erase(const Type& elem){
+            if (!head) return;
+            if (head->getElement() == elem) {
+                deleteHead();
+                return;
+            }
+            Node* current = head;
+            for ( ; current && current->getNext(); current = current->getNext()) {
+                if (current->getNext()->getElement() == elem) {
+                    Node* next_next = current->getNext()->getNext();
+                    delete current->getNext();
+                    current->setNext(next_next);
+                    --set_size;
+                    return;
+                }
+            }
+        }
         
         /**
          * Remove the element the iterator points to from the set.
          * Iterator to another set is undefined.
          * @param it The iterator to the element to the set.
          */
-        void erase(const iterator& it){}
+        void erase(const iterator& it){
+            erase(*it);
+        }
         
         /**
          * Get the amount of elements in the set.
          * @return The amount of elements in the set.
          */
-        int size() const{}
+        int size() const{
+            return set_size;
+        }
         
         /**
          * Check if the set is empty.
          * @return true is the set is empty.
          */
-        bool empty() const{}
+        bool empty() const{
+            return set_size == 0;
+        }
         
         /**
          * Empty the set, free all allocated memory in the set.
          */
-        void clear(){}
+        void clear(){
+            while (head) deleteHead();
+        }
         
         /**
          * Get an iterator to the first element in the set.
          * If set is empty, return the same as end.
          * @return
          */
-        iterator begin(){}
+        iterator begin(){
+            return iterator(head);
+        }
         
         /**
          * Get a const_iterator to the first element in the set.
          * If set is empty, return the same as end.
          * @return
          */
-        const_iterator begin() const{}
+        const_iterator begin() const{
+            return const_iterator(head);
+        }
         
         /**
          * Returns an iterator referring to the past-the-end element in the set.
@@ -398,7 +457,11 @@ namespace mtm{
          * thus should not be dereferenced.
          * @return Iterator to past-the-end element.
          */
-        iterator end(){}
+        iterator end(){
+            /* In our implementation, the past-the-end element is always
+             * nullptr, since the 'next' of last node is defined to be so. */
+            return iterator(nullptr);
+        }
         
         /**
          * Returns a const_iterator referring to the past-the-end element in
@@ -408,28 +471,49 @@ namespace mtm{
          * thus should not be dereferenced.
          * @return const_iterator to past-the-end element.
          */
-        const_iterator end() const{}
+        const_iterator end() const{
+            return const_iterator(nullptr);
+        }
         
         /**
          * Find an element in the set.
          * @param elem The element to find
          * @return An iterator that points to the elem.
          */
-        iterator find(const Type& elem){}
+        iterator find(const Type& elem){
+            if (!head) return iterator(nullptr);
+            Node* current = head;
+            for ( ; current; current = current->getNext()) {
+                if (current->getElement() == elem) return iterator(current);
+            }
+            return iterator(nullptr);
+        }
         
         /**
          * Find an element in the set.
          * @param elem The element to find
          * @return A const_iterator that points to the elem.
          */
-        const_iterator find(const Type& elem) const{}
+        const_iterator find(const Type& elem) const{
+            if (!head) return const_iterator(nullptr);
+            Node* current = head;
+            for ( ; current; current = current->getNext()) {
+                if (current->getElement() == elem) {
+                    return const_iterator(current);
+                }
+            }
+            return const_iterator(nullptr);
+        }
         
         /**
          * Check if an element is in the set.
          * @param elem The element to check if it's in the set.
          * @return True if the element is in the set, false otherwise.
          */
-        bool contains(const Type& elem) const{}
+        bool contains(const Type& elem) const{
+            const_iterator find = this->find(elem);
+            return find != const_iterator(nullptr);
+        }
         
         /**
          * Check if this set is a superset of a given set.
@@ -438,7 +522,15 @@ namespace mtm{
          * @param subset The set to check if it's a subset.
          * @return True if the given set is a subset of this set.
          */
-        bool isSuperSetOf(const MtmSet& subset) const{}
+        bool isSuperSetOf(const MtmSet& subset) const{
+            Node* current = subset.head;
+            for ( ; current; current = current->getNext()) {
+                if (!contains(current->getElement())) {
+                    return false;
+                }
+            }
+            return true;
+        }
         
         /**
          * Check if two set are equal, meaning, they contain the same elements.
@@ -446,7 +538,9 @@ namespace mtm{
          * @return true if thw two set conatain the same elements, false
          *  otherwise.
          */
-        bool operator==(const MtmSet& rhs) const{}
+        bool operator==(const MtmSet& rhs) const{
+            return this->isSuperSetOf(rhs) && rhs.isSuperSetOf(*this);
+        }
         
         /**
          * Check if two set are equal, meaning, they contain the same elements.
@@ -454,29 +548,49 @@ namespace mtm{
          * @return false if thw two set conatain the same elements, true
          *  otherwise.
          */
-        bool operator!=(const MtmSet& rhs) const{}
+        bool operator!=(const MtmSet& rhs) const{
+            return !(*this == rhs);
+        }
         
         /**
          * Insert all the elements in the given set to this set (union).
          * @param set The set to insert all the elements from.
          * @return A reference to this set.
          */
-        MtmSet& unite(const MtmSet& set){}
+        MtmSet& unite(const MtmSet& set){
+            Node* current = set.head;
+            for ( ; current; current = current->getNext()) {
+                this->insert(current->getElement());
+            }
+            return *this;
+        }
         
         /**
          * Returns a new set that is an union of this set, and a given set.
          * @param set The other set (other than this) to be in the union.
          * @return The new set.
          */
-        MtmSet unite(const MtmSet& set) const{}
+        MtmSet unite(const MtmSet& set) const{
+            MtmSet copied_set(*this);
+            MtmSet& united = copied_set.unite(set);
+            return united;
+        }
         
         /**
-         * Remove all the elements from this set, that are in the given set
+         * Remove all the elements from this set, that are not in the given set
          * (intersection).
          * @param set The other set in the intersection.
          * @return A reference to this set.
          */
-        MtmSet& intersect(const MtmSet& set){}
+        MtmSet& intersect(const MtmSet& set){
+            Node* current = this->head;
+            while (current) {
+                Type& elem = current->getElement();
+                current = current->getNext();
+                if (!set.contains(elem)) this->erase(elem);
+            }
+            return *this;
+        }
         
         /**
          * Returns a new set that is an intersection of this set,
@@ -484,20 +598,46 @@ namespace mtm{
          * @param set The other set (other than this) to be in the intersection.
          * @return The new set.
          */
-        MtmSet intersect(const MtmSet& set) const{}
+        MtmSet intersect(const MtmSet& set) const{
+            MtmSet copied(*this);
+            MtmSet& intersected = copied.intersect(set);
+            return intersected;
+        }
         
         /**
          * Remove all the elements in the set, that doesn't meet a given
          *  condition.
          * @tparam func - A function of an object-function that receive 1
          *  argument, of the same type as an element in the set, and returns
-         *  a bool.
+         *  a bool. i.e.: bool () (Type)
          * @param condition - function (or object-function) that returns true
          * if the element is meeting the condition and false otherwise.
          * @return A reference to this set.
          */
         template<typename func>
-        MtmSet& getSubSet(func condition){}
+        MtmSet& getSubSet(func condition){
+            Node* current = this->head;
+            while (current) {
+                Type& elem = current->getElement();
+                current = current->getNext();
+                if (!condition(elem)) this->erase(elem);
+            }
+            return *this;
+        }
+
+        MtmSet& operator=(const MtmSet& set) {
+            Node* original = set.head;
+            this->clear();
+            if (!original) return *this;
+            this->head = new Node(*original);
+            Node* current = this->head;
+            original = original->getNext();
+            for ( ; original; original = original->getNext()) {
+                Node* new_node = new Node(*original);
+                current = current->setNext(new_node);
+            }
+            return *this;
+        }
         
         /**
          * Get a subset of this set, that contains all the elements in the set,
@@ -510,7 +650,11 @@ namespace mtm{
          * @return A the new set.
          */
         template<typename func>
-        MtmSet getSubSet(func condition) const{}
+        MtmSet getSubSet(func condition) const{
+            MtmSet copied(*this);
+            copied.getSubSet(condition);
+            return copied;
+        }
     };
 } // namespace mtm
 
