@@ -17,21 +17,36 @@ namespace mtm{
         std::string name, clan;
         int children, adults, tools, food, morale;
 
-    /**
-     * Gets the power of the group.
-     * Power is defined : (10nA + 3nC)*(10nT + nF)*morale/100
-     * Where as: nA = number of adults, nC = number of children
-     * nF = food, nT = tools
-     */
-    double getPower() const;
+        /**
+         * Gets the power of the group.
+         * Power is defined : (10nA + 3nC)*(10nT + nF)*morale/100
+         * Where as: nA = number of adults, nC = number of children
+         * nF = food, nT = tools
+         */
+        double getPower() const;
 
         /**
-     * handleFight: applies the aftermath of a fight.
-     * This Group is the winner, loser group in param
-     * @param loser The losing Group
-     * This function assumes groups fought (can fight)
+         * handleFight: applies the aftermath of a fight.
+         * This Group is the winner, loser group in param
+         * @param loser The losing Group
+         * This function assumes groups fought (can fight)
+         */
+         void handleFight(Group &loser);
+
+        /**
+        * Clears fields in group. Only used when size = 0
+        * all numbers become 0, all strings become empty.
+        */
+        void clearGroup();
+
+        /**
+     * Checks how much trade should be done.
+     * assumes trade has succeeded and calculates amount.
+     * @param other
+     * @return the amount that should be traded
      */
-     void handleFight(Group &loser);
+        int checkTradeAmount(Group const &other) const;
+
 
     public:
         /**

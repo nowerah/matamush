@@ -2,6 +2,7 @@
 // Created by Noor Athamnah on 1/17/2018.
 //
 
+#include <iostream>
 #include "Group.h" /* includes string and ostream */
 #include "exceptions.h"
 
@@ -80,7 +81,7 @@ namespace mtm {
      * @return The name of the clan that the group belongs to.
      */
     const std::string &Group::getClan() const {
-        this->clan;
+        return this->clan;
     }
 
     /**
@@ -142,7 +143,7 @@ namespace mtm {
      *  this group's name is bigger (lexicographic) than rhs's name.
      *  false otherwise.
      */
-    bool operator>(const Group &rhs) const {
+    bool Group::operator>(const Group &rhs) const {
         return rhs < *this;
     }
 
@@ -153,7 +154,7 @@ namespace mtm {
      *  this group's name is not bigger (lexicographic) than rhs's name.
      *  false otherwise.
      */
-    bool operator<=(const Group &rhs) const {
+    bool Group::operator<=(const Group &rhs) const {
         return !(*this > rhs);
     }
 
@@ -164,7 +165,7 @@ namespace mtm {
      *  this group's name is not smaller (lexicographic) than rhs's name.
      *  false otherwise.
      */
-    bool operator>=(const Group &rhs) const {
+    bool Group::operator>=(const Group &rhs) const {
         return !(*this > rhs);
     }
 
@@ -175,7 +176,7 @@ namespace mtm {
      * equal to rhs's name.
      * false otherwise.
      */
-    bool operator==(const Group &rhs) const {
+    bool Group::operator==(const Group &rhs) const {
         if (*this < rhs || *this > rhs) return false;
         return true;
     }
@@ -187,7 +188,7 @@ namespace mtm {
      * isn't equal to rhs's name.
      * false otherwise.
      */
-    bool operator!=(const Group &rhs) const {
+    bool Group::operator!=(const Group &rhs) const {
         return !(*this == rhs);
     }
 
@@ -225,19 +226,13 @@ namespace mtm {
         this->adults += other.adults;
         this->children += other.children;
         this->food += other.food;
-        this->tools = other.tools;
+        this->tools += other.tools;
         int morale_total = this->morale * size_this + other.morale * size_other;
         double morale_new = double(morale_total) / double(size_other + size_this);
         this->morale = int(morale_new);
-        other.name = "";
-        other.clan = "";
-        other.adults = 0;
-        other.children = 0;
-        other.food = 0;
-        other.tools = 0;
+        other.clearGroup();
         return true;
     }
-
 
     /**
      * Divide the group.
@@ -311,12 +306,30 @@ namespace mtm {
         if (*this == opponent) return DRAW;
         else if (*this > opponent){ //This group wins
             this->handleFight(opponent);
+            if(this->getPower()==0) this->clearGroup();
+            if(opponent.getPower()==0) this->clearGroup();
             return WON;
         }
         else {
             opponent.handleFight(*this);
+            if(this->getPower()==0) this->clearGroup();
+            if(opponent.getPower()==0) this->clearGroup();
             return LOST;
         }
+    }
+
+    /**
+        * Clears fields in group.
+        * all numbers become 0, all strings become empty.
+        */
+    void Group::clearGroup(){
+        this->children = 0;
+        this->adults = 0;
+        this->food = 0;
+        this->tools = 0;
+        this->morale = 0;
+        this->clan = "";
+        this->name = "";
     }
 
     /**
@@ -352,11 +365,6 @@ namespace mtm {
         this->morale += int(double(this->morale)*0.2 + 0.8);
     }
 
-
-    /*
-     *!!!!!!! NOT DONE!!!!!
-     */
-
     /**
      * Try to do a trade between the two groups.
      * Each groups tries make its tools and food equal.
@@ -382,10 +390,47 @@ namespace mtm {
         if (food1 == tools1 || food2 == tools2 ||
                 (food1 > tools1 && food2 > tools2)||
                 (food1 < tools1 && food2 < tools2)) return false;
-
+        int trade_amount = this->checkTradeAmount(other);
+        if(food1>tools1){
+            this->food -= trade_amount;
+            other.food += trade_amount;
+            other.tools -= trade_amount;
+            this->tools += trade_amount;
+        }
+        else {
+            this->tools -= trade_amount;
+            other.tools += trade_amount;
+            other.food -= trade_amount;
+            this->food += trade_amount;
+        }
         return true;
     }
 
+    /**
+     * Checks how much trade should be done.
+     * assumes trade has succeeded and calculates amount.
+     * @param other
+     * @return the amount that should be traded
+     */
+    int Group::checkTradeAmount(Group const &other) const{
+        int diff1 = int((this->food - this->tools)/2.0 + 0.5);
+        int diff2 = int((other.food - other.tools)/2.0 + 0.5);
+        int average;
+        if(diff1 < 0) {
+            diff1 = -diff1;
+            average = int((diff1 + diff2)/2.0 + 0.5);
+            if(average > this->tools) return this->tools;
+            if(average > other.food) return other.food;
+            return average;
+        }
+        else {
+            diff2 = -diff2;
+            average = int((diff1 + diff2)/2.0 + 0.5);
+            if(average > this->food) return this->food;
+            if(average > other.tools) return other.tools;
+            return average;
+        }
+    }
 
     /**
      * Print the data of a given group. Output form:
@@ -401,5 +446,13 @@ namespace mtm {
      * @param group The group to print
      * @return the output stream
      */
-    friend std::ostream &operator<<(std::ostream &os, const Group &group);
+    std::ostream& operator<<(std::ostream &os, const Group &group){
+        return os << "Group's name: " << group.name << std::endl
+         << "Group's clan: " << group.clan << std::endl
+         << "Group's children: " << group.children << std::endl
+         << "Group's adults: " << group.adults << std::endl
+         << "Group's tools: " << group.tools << std::endl
+         << "Group's food: " << group.food << std::endl
+         << "Group's morale: " << group.morale << std::endl;
+    }
 }

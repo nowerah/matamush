@@ -5,10 +5,12 @@
 #include "Group.h"
 #include <ostream>
 #include <memory>
+#include "MtmSet.h"
 
 namespace mtm{
     
     typedef std::shared_ptr<Group> GroupPointer;
+
     /**
      * A clan of multiple groups. Groups can join a clan, and clans can be
      * friends to other clans.
@@ -16,6 +18,33 @@ namespace mtm{
      * lost all of its people, will be removed from the clan.
      */
     class Clan{
+        std::string name;
+        MtmSet<GroupPointer> groups;
+        MtmSet<Clan*> friends;
+
+
+        /**
+         * Removes a Clan from the friend set.
+         * Only used when the two are friends
+         * Note: is asymmetrical
+         * @param friend that should be removed
+         */
+        void removeFriend(Clan friend)
+
+        /**
+         * Clears a clan. makes name empty.
+         * Clears Friends and Group sets.
+         */
+        void clear();
+
+        /**
+         * Checks whether the two clans have the same name.
+         * @param other the clan to check with
+         * @return true is yes and false if not.
+         */
+        bool isEqual(const Clan& other) const;
+
+
     
     public:
         /**
