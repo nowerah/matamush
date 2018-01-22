@@ -43,6 +43,7 @@ namespace mtm {
         void groupArrive(cstring group_name, cstring clan,
                                  map<string, Clan>& clan_map) override;
 
+        int test();
     };
 }
 

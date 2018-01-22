@@ -1,9 +1,6 @@
-#include <algorithm>
 #include "Plain.h"
 
 namespace mtm {
-
-    bool isStronger(const GroupPointer& group1, const GroupPointer& group2);
 
     Plain::Plain(cstring name) : Area(name) {
     }
@@ -17,10 +14,6 @@ namespace mtm {
             ++i;
         } while (this->findGroup(new_name));
         return new_name;
-    }
-
-    bool isStronger(const GroupPointer& group1, const GroupPointer& group2) {
-        return *group1 > *group2;
     }
 
     /**
@@ -39,22 +32,21 @@ namespace mtm {
                             map<string, Clan> &clan_map) {
         try {
             Clan& group_clan = getNewGroupClan(group_name, clan, clan_map);
-            GroupPointer group = group_clan.getGroup(group_name);
+            const GroupPointer& group = group_clan.getGroup(group_name);
             int group_size = group->getSize();
             int clan_size = group_clan.getSize();
             if (group_size * 3 > clan_size) { /* group size > 1/3 * clan size */
                 if (group_size >= 10) {
                     cstring new_name(generateNewGroupName(group->getName()));
-                    GroupPointer new_group(new Group(group->divide(new_name)));
-                    group_clan.addGroup(*new_group);
-                    this->groups.push_back(new_group);
+                    group_clan.addGroup(Group(group->divide(new_name)));
+                    this->groups.push_back(group_clan.getGroup(new_name));
                 }
                 this->groups.push_back(group);
             } else { /* group size <= 1/3 * clan size */
                 bool success = false;
-                std::sort(this->groups.begin(), this->groups.end(), isStronger);
+                this->sortByStrongest();
                 for (const GroupPointer& current : this->groups) {
-                    if (current->getClan() != group->getClan()) continue;
+                    if (current->getClan() != clan) continue;
                     if (current->unite(*group, clan_size / 3)) {
                         success = true;
                         break;
@@ -71,14 +63,14 @@ namespace mtm {
 /**
  * Function objects:
  * @code
- * class compareFunction{
+ * class CompareFunction {
  * public:
  *     bool operator()(int a, int b){
  *         return a < b;
  *     }
  * };
  *
- * compareFunction f;
- * f(5,60);
+ * CompareFunction cmp;
+ * cmp(5,60);
  * @endcode
 */

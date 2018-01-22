@@ -1,17 +1,42 @@
 //
 // Created by Noor Athamnah on 1/17/2018.
-// hiiiii
+//
 
 #include <iostream>
 #include "Group.h" /* includes string and ostream */
 #include "exceptions.h"
 
+/* Macros as default values */
+#define TOOLS_PER_ADULT 4
+#define FOOD_PER_ADULT 3
+#define FOOD_PER_CHILD 2
+#define MORALE_INITIAL 70
+
+/* Macros for morale limits */
+#define MORALE_MAX 100
+#define MORALE_MIN 0
+#define MORALE_MIN_FOR_UNITE 70
+
+/* Macros used for calculations of fight result */
+#define DIVISOR_FOOD 2
+#define DIVISOR_FOOD_FURTHER 2.0
+#define DIVISOR_CHILD_LOSER 3
+#define DIVISOR_ADULT_LOSER 3
+#define DIVISOR_TOOLS_LOSER 2
+#define DIVISOR_MORALE_LOSER 5
+#define DIVISOR_ADULT_WINNER 4.0
+#define DIVISOR_TOOLS_WINNER 4.0
+#define DIVISOR_MORALE_WINNER 5
+
 namespace mtm {
+
+    int minOf3(int n1, int n2, int n3);
+    int ceil(int num, int denom);
 
     Group::Group(const std::string &name, const std::string &clan, int children,
                  int adults, int tools, int food, int morale) {
-        if (name == "" || clan == "" || adults < 0 || children < 0
-            || tools < 0 || food < 0 || morale < 0 || morale > 100) {
+        if (name.empty() || adults < 0 || children < 0
+            || tools < 0 || food < 0 || morale < MORALE_MIN || morale > MORALE_MAX) {
             throw GroupInvalidArgs();
         }
         if (adults == 0 && children == 0) throw GroupInvalidArgs();
@@ -39,16 +64,16 @@ namespace mtm {
      *  invalid, or both adults and children are 0.
      */
     Group::Group(const std::string &name, int children, int adults) {
-        if (name == "" || children < 0 || adults < 0) throw GroupInvalidArgs();
+        if (name.empty() || children < 0 || adults < 0) throw GroupInvalidArgs();
         if (adults == 0 && children == 0)
             throw GroupInvalidArgs();
         this->name = name;
         this->children = children;
         this->adults = adults;
         this->clan = "";
-        this->tools = 4 * adults;
-        this->food = 3 * adults + 2 * children;
-        this->morale = 70;
+        this->tools = TOOLS_PER_ADULT * adults;
+        this->food = FOOD_PER_ADULT * adults + FOOD_PER_CHILD * children;
+        this->morale = MORALE_INITIAL;
     }
 
     /**
@@ -96,7 +121,7 @@ namespace mtm {
     //!!!!! Maybe should check the application for floor thing!!!!!
     void Group::changeClan(const std::string &clan) {
         if (this->clan == clan) return;
-        if (this->clan != "") {
+        if (!this->clan.empty()) {
             this->morale = int(0.9 * double(this->morale));
         } else {
             this->morale = int(1.1 * double(this->morale));
@@ -113,9 +138,8 @@ namespace mtm {
     double Group::getPower() const {
         int sum = (10 * this->adults + 3 * this->children)
                   * (10 * this->tools + this->food) * this->morale;
-        return double(sum) / 100;
+        return sum / 100.0;
     }
-
 
     /**
      * Compare two groups. according to power (defined here), and name.
@@ -132,8 +156,7 @@ namespace mtm {
         double power1 = this->getPower(), power2 = rhs.getPower();
         if (power1 < power2) return true;
         if (power1 > power2) return false;
-        if (this->name < rhs.name) return true;
-        return false;
+        return this->name < rhs.name;
     }
 
     /**
@@ -177,8 +200,7 @@ namespace mtm {
      * false otherwise.
      */
     bool Group::operator==(const Group &rhs) const {
-        if (*this < rhs || *this > rhs) return false;
-        return true;
+        return !(*this < rhs || *this > rhs);
     }
 
     /**
@@ -217,9 +239,9 @@ namespace mtm {
         if (this == &other) return false;
         int size_this = this->getSize();
         int size_other = other.getSize();
-        if (this->clan != other.clan || this->morale < 70 || other.morale < 70
-            || (size_this + size_other) > max_amount)
-            return false;
+        if (this->clan != other.clan || (size_this + size_other) > max_amount
+            || this->morale < MORALE_MIN_FOR_UNITE
+            || other.morale < MORALE_MIN_FOR_UNITE) return false;
         if (this->getPower() < other.getPower()) {
             this->name = other.name;
         }
@@ -254,21 +276,16 @@ namespace mtm {
      * only happen of this group has no more than 1 child and 1 adult).
      */
     Group Group::divide(const std::string &name){
-        if (name == "") throw GroupInvalidArgs();
+        if (name.empty()) throw GroupInvalidArgs();
         if(this->children <= 1 && this->adults <= 1){
             throw GroupCantDivide();
         }
-        double half_children = double(children)/2;
-        double half_adults = double(adults)/2;
-        double half_food = double(food)/2;
-        double half_tools = double(tools)/2;
-        Group new_group(name, clan, int(half_children), int(half_adults),
-                        int(half_tools), int(half_food), morale);
-
-        this->children = int(half_children+0.5);
-        this->adults = int(half_adults+0.5);
-        this->food = int(half_food+0.5);
-        this->tools = int(half_tools+0.5);
+        Group new_group(name, clan, int(children / 2.0), int(adults / 2.0),
+                        int(tools / 2.0), int(food / 2.0), morale);
+        this->children = ceil(children, 2);
+        this->adults = ceil(adults, 2);
+        this->food = ceil(food, 2);
+        this->tools = ceil(tools, 2);
         return new_group;
     }
 
@@ -353,16 +370,20 @@ namespace mtm {
      * This function assumes groups fought (can fight)
      */
     void Group::handleFight(Group &loser){
-        int lost_food = int(loser.food/2 + 0.5);
-        loser.children -= int(double(loser.children)/3 + 0.7);
-        loser.adults -= int(double(loser.adults)/3 + 0.7);
-        loser.tools -= int(double(loser.tools)/2 + 0.5);
+        int lost_food = ceil(loser.food, DIVISOR_FOOD);
+        loser.children -= ceil(loser.children, DIVISOR_CHILD_LOSER);
+        loser.adults -= ceil(loser.adults, DIVISOR_ADULT_LOSER);
+        loser.tools -= ceil(loser.tools, DIVISOR_TOOLS_LOSER);
         loser.food -= lost_food;
-        loser.morale -= int(double(loser.morale)*0.2 + 0.8);
-        this->adults -= int(double(this->adults)/4);
-        this->tools -= int(double(this->tools)/4);
-        this->food += int(double(lost_food)/2);
-        this->morale += int(double(this->morale)*0.2 + 0.8);
+        loser.morale -= ceil(loser.morale, DIVISOR_MORALE_LOSER);
+        this->adults -= int(this->adults/DIVISOR_ADULT_WINNER);
+        this->tools -= int(this->tools/DIVISOR_TOOLS_WINNER);
+        this->food += int(lost_food/DIVISOR_FOOD_FURTHER);
+        this->morale += ceil(this->morale, DIVISOR_MORALE_WINNER);
+    }
+
+    int ceil(int num, int denom) {
+        return int((num + denom - 1) / double(denom));
     }
 
     /**
@@ -408,28 +429,34 @@ namespace mtm {
 
     /**
      * Checks how much trade should be done.
-     * assumes trade has succeeded and calculates amount.
+     * Assumes trade has succeeded and calculates amount.
      * @param other
      * @return the amount that should be traded
      */
     int Group::checkTradeAmount(Group const &other) const{
-        int diff1 = int((this->food - this->tools)/2.0 + 0.5);
-        int diff2 = int((other.food - other.tools)/2.0 + 0.5);
-        int average;
-        if(diff1 < 0) {
+        int diff1 = this->food - this->tools;
+        int diff2 = other.food - other.tools;
+        bool moreFood = false;
+        if (diff1 < 0) { // this has more tools, other has more food.
             diff1 = -diff1;
-            average = int((diff1 + diff2)/2.0 + 0.5);
-            if(average > this->tools) return this->tools;
-            if(average > other.food) return other.food;
-            return average;
-        }
-        else {
+        } else { // this has more food, other has more tools.
             diff2 = -diff2;
-            average = int((diff1 + diff2)/2.0 + 0.5);
-            if(average > this->food) return this->food;
-            if(average > other.tools) return other.tools;
-            return average;
+            moreFood = true;
         }
+        diff1 = ceil(diff1, 2);
+        diff2 = ceil(diff2, 2);
+        int average = ceil(diff1 + diff2, 2);
+        if (moreFood) return minOf3(average, this->food, other.tools);
+        return minOf3(average, this->tools, other.food);
+    }
+
+    /**
+     * Returns smallest number among the given three.
+     */
+    int minOf3(int n1, int n2, int n3) {
+        if (n1 < n2 && n1 < n3) return n1;
+        if (n2 < n3) return n2;
+        return n3;
     }
 
     /**

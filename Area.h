@@ -3,10 +3,10 @@
 
 #include <string>
 #include <map>
-#include "Clan.h"
-#include "Group.h"
 #include <vector>
 #include <memory>
+#include "Clan.h"
+#include "Group.h"
 #include "MtmSet.h"
 
 using std::string;

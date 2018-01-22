@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "Clan.h"
 #include "exceptions.h"
-//kjdkj
+
 namespace mtm{
 
     bool compareGroups(const GroupPointer& group1, const GroupPointer& group2);
@@ -92,7 +92,7 @@ namespace mtm{
      *  group in the other clan.
      */
     Clan& Clan::unite(Clan& other, const std::string& new_name){
-        if (new_name == "") throw ClanEmptyName();
+        if (new_name.empty()) throw ClanEmptyName();
         if (this == &other) throw ClanCantUnite();
         for(const GroupPointer& ptr : this->groups) {
             if (other.doesContain(ptr->getName())) {
@@ -167,8 +167,7 @@ namespace mtm{
      * @return true is yes and false if not.
      */
     bool Clan::isEqual(const Clan& other) const{
-        if (this->name == other.name) return true;
-        return false;
+        return this->name == other.name;
     }
 
 
@@ -212,12 +211,8 @@ namespace mtm{
     }
 
     bool compareGroups(const GroupPointer& group1, const GroupPointer& group2) {
-        if ((*group1) > *(group2)) return true;
-        return false;
+        return *group1 > *group2;
     }
-
-
-
 }
 
 
