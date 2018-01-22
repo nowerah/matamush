@@ -1,7 +1,10 @@
+#include <algorithm>
 #include <stdexcept>
 #include "Area.h"
 
 namespace mtm {
+
+    bool compareGroups(const GroupPointer& group1, const GroupPointer& group2);
 
     /**
      * Class fields:
@@ -38,11 +41,15 @@ namespace mtm {
         try {
             Clan& group_clan = clan_map.at(clan);
             if (!group_clan.doesContain(group_name)) throw AreaGroupNotInClan();
-            if (this->findGroup(group_name)) throw AreaGroupAlreadyIn();
+            if (this->getGroupsNames().contains(group_name)) throw AreaGroupAlreadyIn();
             return group_clan;
         } catch (const std::out_of_range& oor) {
             throw AreaClanNotFoundInMap();
         }
+    }
+
+    void Area::sortByStrongest() {
+        std::sort(this->groups.begin(), this->groups.end(), compareGroups);
     }
 
     void Area::addReachableArea(const std::string& area_name) {

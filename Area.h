@@ -29,6 +29,7 @@ namespace mtm{
         const GroupPointer findGroup(const string &group_name) const;
         Clan& getNewGroupClan(const string &group_name, const string &clan,
                                map<string, Clan> &clan_map);
+        void sortByStrongest();
 
     public:
         /**
