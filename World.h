@@ -1,4 +1,3 @@
-
 #ifndef MTM4_WORLD_H
 #define MTM4_WORLD_H
 
@@ -8,17 +7,21 @@
 
 namespace mtm{
     typedef std::shared_ptr<Area> AreaPtr;
+    typedef const string& cstring;
 
     enum AreaType{ PLAIN, MOUNTAIN, RIVER };
     
     class World{
         map<string, Clan> clan_map;
+        map<string, Area> area_map;
+
+        bool hasGroup(cstring group_name);
         
     public:
         /**
          * Empty constructor
          */
-        World();
+        World() = default;
         
         /**
          * Disable copy constructor
@@ -30,7 +33,7 @@ namespace mtm{
          */
         World &operator=(const World &) = delete;
 
-        ~World();
+        ~World() = default;
         
         /**
          * Add a new clan to the world.
@@ -39,7 +42,7 @@ namespace mtm{
          * @throws WorldClanNameIsTaken If there is or was a clan with the
          *  given name.
          */
-        void addClan(const string& new_clan);
+        void addClan(cstring new_clan);
         
         /**
          * Add a new area to the world.
@@ -49,7 +52,7 @@ namespace mtm{
          * @throws WorldAreaNameIsTaken If there is already an area with the
          *  given name.
          */
-        void addArea(const string& area_name, AreaType type);
+        void addArea(cstring area_name, AreaType type);
         
         /**
          * Add a new group to the world, with given size, clan, and starting
@@ -70,8 +73,8 @@ namespace mtm{
          * @throws WorldAreaNotFound If there is no area with the given name
          *  in the world.
          */
-        void addGroup(const string& group_name, const string& clan_name, int
-        num_children, int num_adults, const string& area_name);
+        void addGroup(cstring group_name, cstring clan_name, int
+        num_children, int num_adults, cstring area_name);
         
         /**
          * Make that an area reachable from another area.
@@ -83,7 +86,7 @@ namespace mtm{
          * @throws WorldAreaNotFound If at least one of the areas isn't in
          *  the world.
          */
-        void makeReachable(const string& from, const string& to);
+        void makeReachable(cstring from, cstring to);
         
         /**
          * Move a group to destination area.
@@ -98,7 +101,7 @@ namespace mtm{
          * @throws WorldAreaNotReachable If the destination area isn't
          *  reachable from the area the group is currently in.
          */
-        void moveGroup(const string& group_name, const string& destination);
+        void moveGroup(cstring group_name, cstring destination);
         
         /**
          * Make to clans friends.
@@ -107,7 +110,7 @@ namespace mtm{
          * @throws WorldClanNotFound If at least one of the clans isn't in
          * the world.
          */
-        void makeFriends(const string& clan1, const string& clan2);
+        void makeFriends(cstring clan1, cstring clan2);
         
         
         /**
@@ -120,7 +123,7 @@ namespace mtm{
          * clan that is not clan1 or clan2.
          * @throws WorldClanNotFound If clan1 or clan2 are not in the world.
          */
-        void uniteClans(const string& clan1, const string& clan2, const
+        void uniteClans(cstring clan1, cstring clan2, const
         string& new_name);
         
         /**
@@ -134,7 +137,8 @@ namespace mtm{
          * @throws WorldGroupNotFound If there is no group in the world with
          *  the given name.
          */
-        void printGroup(std::ostream& os, const string& group_name) const;
+        void printGroup(std::ostream& os, cstring group_name) const;
+
         /**
          * Print a clan to the ostream, using the clan output function.
          * @param os The ostream to print into.
@@ -142,7 +146,7 @@ namespace mtm{
          * @throws WorldClanNotFound If there is no clan with the given name
          *  in the world.
          */
-        void printClan(std::ostream& os, const string& clan_name) const;
+        void printClan(std::ostream& os, cstring clan_name) const;
     };
     
 } // namespace mtm

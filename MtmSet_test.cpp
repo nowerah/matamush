@@ -8,7 +8,7 @@ bool isEven(int n){
     return !(n%2);
 }
 
-bool exampleSet(){
+bool testSet(){
     MtmSet<int> set;
     ASSERT_NO_EXCEPTION(set.insert(1));
     ASSERT_NO_EXCEPTION(set.insert(2));
@@ -66,6 +66,6 @@ bool exampleSet(){
 }
 
 int main(){
-    RUN_TEST(exampleSet);
+    RUN_TEST(testSet);
     return 0;
 }
