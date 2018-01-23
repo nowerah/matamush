@@ -92,7 +92,7 @@ namespace mtm {
      *  same name;
      */
     void Area::groupLeave(const std::string &group_name) {
-        std::vector<GroupPointer>::iterator it = groups.begin();
+        std::vector<GroupPointer>::const_iterator it = groups.begin();
         for ( ; it != groups.end(); ++it) {
             Group& group(*(*it));
             if (group.getName() == group_name) {
@@ -110,5 +110,4 @@ namespace mtm {
         }
         return names;
     }
-
 }

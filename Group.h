@@ -63,7 +63,7 @@ namespace mtm{
          * @param food Bigger number means more food. Must be non-negative.
          * @param morale Bigger number means higher morale.
          *  Must be between 0 to 100.
-         * @throws GroupInvalidArgs If at least one of the arguments is
+         * @throws `GroupInvalidArgs If at least one of the arguments is
          *  invalid, or both adults and children are 0.
          */
         Group(const std::string& name, const std::string& clan, int children,

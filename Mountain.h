@@ -13,7 +13,7 @@ namespace mtm {
 
     public:
         explicit Mountain(const string& name);
-        ~Plain() override = default;
+        ~Mountain() override = default;
 
         /**
          * Disable copy constructor and assignment operator.
