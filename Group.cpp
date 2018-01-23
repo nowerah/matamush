@@ -123,7 +123,6 @@ namespace mtm {
         if (this->clan == clan) return;
         if (!this->clan.empty()) {
             this->morale = int(0.9 * double(this->morale));
-            if (this->morale < 0) this->morale = 0;
         } else {
             this->morale = int(1.1 * double(this->morale));
             if (this->morale > 100) this->morale = 100;
@@ -382,6 +381,7 @@ namespace mtm {
         this->tools -= int(this->tools/DIVISOR_TOOLS_WINNER);
         this->food += int(lost_food/DIVISOR_FOOD_FURTHER);
         this->morale += ceil(this->morale, DIVISOR_MORALE_WINNER);
+        if (this->morale > 100) this->morale = 100;
     }
 
     int ceil(int num, int denom) {

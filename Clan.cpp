@@ -40,6 +40,7 @@ namespace mtm{
      * given name.
      */
     const GroupPointer& Clan::getGroup(const std::string& group_name) const{
+        if (group_name.empty()) throw ClanGroupNotFound();
         for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
             if ((*itr)->getName() == group_name) {
                 return *itr;

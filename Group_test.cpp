@@ -6,7 +6,8 @@
 #include "exceptions.h"
 #include "testMacros.h"
 
-#define MAX_UNITE 250
+#define MAX_UNITE1 250
+#define MAX_UNITE2 400
 
 using namespace mtm;
 
@@ -39,8 +40,50 @@ bool testGroup() {
     ASSERT_FALSE(hawari >= athamnah);
     ASSERT_TRUE(farah == hawari);
 
-    ASSERT_FALSE(hawari.unite(hawari, MAX_UNITE));
-    ASSERT_FALSE(hawari.unite(athamnah, MAX_UNITE));
+    ASSERT_FALSE(hawari.unite(hawari, MAX_UNITE1));
+    ASSERT_FALSE(hawari.unite(athamnah, MAX_UNITE1));
+    Group hanna("Hanna", "Jaafar", 53, 74, 200, 400, 80);
+    Group bathish("Bathish", "Jaafar", 50, 86, 174, 263, 80);
+    ASSERT_FALSE(hanna.unite(bathish, MAX_UNITE1));
+    ostringstream os;
+    ASSERT_NO_EXCEPTION(os << hanna);
+    ASSERT_TRUE(VerifyOutput(os ,"Group's name: Hanna\n"
+            "Group's clan: Jaafar\n"
+            "Group's children: 53\n"
+            "Group's adults: 74\n"
+            "Group's tools: 200\n"
+            "Group's food: 400\n"
+            "Group's morale: 80\n"));
+    Group khoury("Khoury", "Jaafar", 53, 74, 200, 400, 65);
+    Group abuleil("Abu Leil", "Jaafar", 50, 52, 174, 263, 90);
+    ASSERT_FALSE(khoury.unite(abuleil, MAX_UNITE1));
+
+    ASSERT_TRUE(hanna > bathish);
+    ASSERT_TRUE(bathish.unite(hanna, MAX_UNITE2));
+    ASSERT_NO_EXCEPTION(os << bathish);
+    ASSERT_TRUE(VerifyOutput(os ,"Group's name: Hanna\n"
+            "Group's clan: Jaafar\n"
+            "Group's children: 103\n"
+            "Group's adults: 160\n"
+            "Group's tools: 374\n"
+            "Group's food: 663\n"
+            "Group's morale: 80\n"));
+    ASSERT_NO_EXCEPTION(os << hanna);
+    ASSERT_TRUE(VerifyOutput(os ,"Group's name: \n"
+            "Group's clan: \n"
+            "Group's children: 0\n"
+            "Group's adults: 0\n"
+            "Group's tools: 0\n"
+            "Group's food: 0\n"
+            "Group's morale: 0\n"));
+
+
+
+
+
+
+
+
 
 
 
