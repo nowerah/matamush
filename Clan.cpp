@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "Clan.h"
 #include "exceptions.h"
-//kjdkj
+
 namespace mtm{
 
     bool compareGroups(const GroupPointer& group1, const GroupPointer& group2);
@@ -212,8 +212,7 @@ namespace mtm{
     }
 
     bool compareGroups(const GroupPointer& group1, const GroupPointer& group2) {
-        if ((*group1) > *(group2)) return true;
-        return false;
+        return *group1 > *group2;
     }
 
 
