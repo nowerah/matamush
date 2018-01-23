@@ -206,6 +206,7 @@ namespace mtm{
         os << "Clan's name: " << clan.name << std::endl
            << "Clan's groups:" << std::endl;
         for(std::list<GroupPointer>::const_iterator itr = copied.begin(); itr!= copied.end() ; ++itr ){
+            if ((*itr)->getSize() == 0) continue;
             os << (*itr)->getName() << std::endl;
         }
         return os;
