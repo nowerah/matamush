@@ -123,8 +123,10 @@ namespace mtm {
         if (this->clan == clan) return;
         if (!this->clan.empty()) {
             this->morale = int(0.9 * double(this->morale));
+            if (this->morale < 0) this->morale = 0;
         } else {
             this->morale = int(1.1 * double(this->morale));
+            if (this->morale > 100) this->morale = 100;
         }
         this->clan = clan;
     }
@@ -189,7 +191,7 @@ namespace mtm {
      *  false otherwise.
      */
     bool Group::operator>=(const Group &rhs) const {
-        return !(*this > rhs);
+        return !(*this < rhs);
     }
 
     /**
