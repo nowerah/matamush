@@ -1,4 +1,4 @@
-#include "../testMacros.h"
+#include "testMacros.h"
 #include "../Group.h"
 #include "../Clan.h"
 #include "../Area.h"
@@ -316,7 +316,7 @@ bool testRiver(){
 }
 
 int main(){
-    /* All exceptions are tested in testPlain, so the other two tests don't test them. */
+    /* All exceptions are tested in testPlain, so the other two test don't test them. */
     RUN_TEST(testPlain);
     RUN_TEST(testMountain);
     RUN_TEST(testRiver);

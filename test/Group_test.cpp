@@ -1,6 +1,6 @@
 #include "../Group.h" /* includes string and ostream */
 #include "../exceptions.h"
-#include "../testMacros.h"
+#include "testMacros.h"
 
 #define MAX_UNITE1 250
 #define MAX_UNITE2 400

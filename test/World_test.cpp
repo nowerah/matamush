@@ -1,4 +1,4 @@
-#include "../testMacros.h"
+#include "testMacros.h"
 #include "../Group.h"
 #include "../Clan.h"
 #include "../Area.h"

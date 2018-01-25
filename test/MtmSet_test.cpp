@@ -1,4 +1,4 @@
-#include "../testMacros.h"
+#include "testMacros.h"
 #include "../MtmSet.h"
 #include "../exceptions.h"
 
