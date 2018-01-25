@@ -103,7 +103,6 @@ bool testPlain(){
 
     const GroupPointer& estonian(clan_map.at("Apache").getGroup("Estonian"));
     const GroupPointer& aragonian(clan_map.at("Apache").getGroup("Aragonian"));
-    const GroupPointer& aragonian_2(clan_map.at("Apache").getGroup("Aragonian_2"));
 
     /* Ensure divisions */
     ostringstream os;
@@ -158,7 +157,7 @@ bool testPlain(){
     ASSERT_TRUE(estonian->getSize() == 31);
 
     /* Ensure new divided group's name is Werewolves_3 */
-    ASSERT_NO_EXCEPTION(tel_aviv->groupArrive("Werewolves", "Coyote", clan_map));
+    ASSERT_NO_EXCEPTION(tel_aviv->groupArrive("Werewolves","Coyote",clan_map));
     ASSERT_TRUE(tel_aviv->getGroupsNames().contains("Werewolves_3"));
 
     return true;

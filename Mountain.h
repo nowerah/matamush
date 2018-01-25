@@ -9,7 +9,7 @@
 
 namespace mtm {
     class Mountain : public Area {
-        GroupPointer ruler;
+        string ruler;
 
     public:
         explicit Mountain(const string& name);

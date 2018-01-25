@@ -122,7 +122,10 @@ namespace mtm{
         this->name = new_name;
         for(std::list<GroupPointer>::const_iterator itr
                 = other.groups.begin(); itr != other.groups.end(); ++itr) {
-            this->addGroup(**itr); // also changes their clan
+            if ((**itr).getSize() > 0) {
+                this->groups.push_back(*itr);
+                (**itr).changeClan(this->name);
+            }
         }
         for(MtmSet<Clan*>::const_iterator itr = other.friends.begin();
             itr != other.friends.end(); ++itr) {

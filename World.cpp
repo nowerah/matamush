@@ -239,13 +239,18 @@ namespace mtm {
         }
         Clan& given_clan1 = clan_map.at(clan1);
         Clan& given_clan2 = clan_map.at(clan2);
-        Clan united(given_clan1.unite(given_clan2, new_name));
+    
+        if (new_name != clan1 && new_name != clan2) {
+            clan_map.insert(std::pair<string, Clan>(new_name, Clan(new_name)));
+        }
+        Clan& united_clan = clan_map.at(new_name);
+        if (new_name != clan1) united_clan.unite(given_clan1, new_name);
+        if (new_name != clan2) united_clan.unite(given_clan2, new_name);
         
         // To change the key of the new clan, we remove the two old keys,
         // and add a new one.
-        clan_map.erase(clan1);
-        clan_map.erase(clan2);
-        clan_map.insert(std::pair<string, Clan>(new_name, united));
+        if (new_name != clan1) clan_map.erase(clan1);
+        if (new_name != clan2) clan_map.erase(clan2);
     }
 
     /**
