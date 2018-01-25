@@ -41,7 +41,9 @@ namespace mtm {
         try {
             Clan& group_clan = clan_map.at(clan);
             if (!group_clan.doesContain(group_name)) throw AreaGroupNotInClan();
-            if (this->getGroupsNames().contains(group_name)) throw AreaGroupAlreadyIn();
+            if (this->getGroupsNames().contains(group_name)) {
+                throw AreaGroupAlreadyIn();
+            }
             return group_clan;
         } catch (const std::out_of_range& oor) {
             throw AreaClanNotFoundInMap();

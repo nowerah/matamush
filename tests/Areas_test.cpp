@@ -1,11 +1,11 @@
-#include "testMacros.h"
-#include "Group.h"
-#include "Clan.h"
-#include "Area.h"
-#include "River.h"
-#include "Plain.h"
-#include "Mountain.h"
-#include "exceptions.h"
+#include "../testMacros.h"
+#include "../Group.h"
+#include "../Clan.h"
+#include "../Area.h"
+#include "../River.h"
+#include "../Plain.h"
+#include "../Mountain.h"
+#include "../exceptions.h"
 
 using namespace mtm;
 

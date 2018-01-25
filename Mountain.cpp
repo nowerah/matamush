@@ -13,7 +13,8 @@ namespace mtm {
 
 
     // Deal with the option of a group becoming empty after a fight.
-    void Mountain::groupArrive(const string &group_name, const string &clan, map<string, Clan> &clan_map) {
+    void Mountain::groupArrive(const string &group_name, const string &clan,
+                               map<string, Clan> &clan_map) {
         try {
             Clan& group_clan = getNewGroupClan(group_name, clan, clan_map);
             const GroupPointer& group = group_clan.getGroup(group_name);
@@ -27,6 +28,7 @@ namespace mtm {
                 return;
             }
             if (group->fight(*ruler) == WON) ruler = group;
+            
         } catch(...) {
             throw;
         }
@@ -44,6 +46,7 @@ namespace mtm {
             this->sortByStrongest();
             this->ruler = *this->groups.begin();
             for (const GroupPointer& current : this->groups){
+                if (current->getSize() == 0) continue;
                 if (current->getClan() == group->getClan()){
                     this->ruler = current;
                     return;

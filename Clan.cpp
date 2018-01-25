@@ -15,7 +15,17 @@ namespace mtm{
         if (name.empty()) throw ClanEmptyName();
         this->name = name;
     }
-
+    
+    /**
+     * Copy constructor
+     * @param other The clan to copy everything from.
+     */
+    Clan::Clan(const Clan &other) : name(other.name), friends(other.friends) {
+        for (const GroupPointer& group : other.groups) {
+            this->groups.push_back(group);
+        }
+    }
+    
     /**
      * Add a group (copy of it) to the clan
      * @param group The group to add to the clan
@@ -41,7 +51,8 @@ namespace mtm{
      */
     const GroupPointer& Clan::getGroup(const std::string& group_name) const{
         if (group_name.empty()) throw ClanGroupNotFound();
-        for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
+        std::list<GroupPointer>::const_iterator itr = this->groups.begin();
+        for ( ; itr != groups.end(); ++itr) {
             if ((*itr)->getName() == group_name) {
                 return *itr;
             }
@@ -50,7 +61,8 @@ namespace mtm{
     }
 
     bool Clan::doesContain(const std::string& group_name) const{
-        for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
+        std::list<GroupPointer>::const_iterator itr = this->groups.begin();
+        for ( ; itr != groups.end(); ++itr) {
             if ((*itr)->getName() == group_name) {
                 return true;
             }
@@ -66,7 +78,8 @@ namespace mtm{
      */
     int Clan::getSize() const{
         int total_size = 0;
-        for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
+        std::list<GroupPointer>::const_iterator itr = this->groups.begin();
+        for ( ; itr != groups.end(); ++itr) {
             total_size += (*itr)->getSize();
         }
         return total_size;
@@ -100,23 +113,20 @@ namespace mtm{
                 throw ClanCantUnite();
             }
         }
-        if (new_name == this->name){
-            for (std::list<GroupPointer>::const_iterator itr = other.groups.begin(); itr!=groups.end(); ++itr){
+        if (new_name != this->name) {
+            for (std::list<GroupPointer>::const_iterator itr
+                    = this->groups.begin(); itr != this->groups.end(); ++itr) {
                 (*itr)->changeClan(new_name);
             }
         }
-        else{
-            this->name = new_name;
-            for (std::list<GroupPointer>::const_iterator itr = this->groups.begin(); itr!=groups.end(); ++itr) {
-                (*itr)->changeClan(new_name);
-            }
+        this->name = new_name;
+        for(std::list<GroupPointer>::const_iterator itr
+                = other.groups.begin(); itr != other.groups.end(); ++itr) {
+            this->addGroup(**itr); // also changes their clan
         }
-        for(std::list<GroupPointer>::const_iterator itr = other.groups.begin()
-                ; itr!=other.groups.end(); ++itr) {
-            this->addGroup(**itr);
-        }
-        for(MtmSet<Clan*>::const_iterator itr = other.friends.begin(); itr!=other.friends.end(); ++itr) {
-            this->makeFriend(**itr);
+        for(MtmSet<Clan*>::const_iterator itr = other.friends.begin();
+            itr != other.friends.end(); ++itr) {
+            if (*itr != this) this->makeFriend(**itr);
             other.removeFriend(**itr);
         }
         other.clear();
@@ -180,7 +190,10 @@ namespace mtm{
      */
     void Clan::removeFriend(Clan other){
         for(Clan* curr : other.friends) {
-            other.friends.erase(curr);
+            if (curr == this) {
+                other.friends.erase(this);
+                return;
+            }
         }
     }
 
@@ -205,14 +218,15 @@ namespace mtm{
         copied.sort(compareGroups);
         os << "Clan's name: " << clan.name << std::endl
            << "Clan's groups:" << std::endl;
-        for(std::list<GroupPointer>::const_iterator itr = copied.begin(); itr!= copied.end() ; ++itr ){
+        std::list<GroupPointer>::const_iterator itr = copied.begin();
+        for ( ; itr != copied.end(); ++itr) {
             if ((*itr)->getSize() == 0) continue;
             os << (*itr)->getName() << std::endl;
         }
         return os;
     }
-
-    bool compareGroups(const GroupPointer& group1, const GroupPointer& group2) {
+    
+    bool compareGroups(const GroupPointer& group1, const GroupPointer& group2){
         return *group1 > *group2;
     }
 }

@@ -1,5 +1,6 @@
 #include <string>
 #include <stdexcept>
+#include <cassert>
 #include "World.h"
 #include "Plain.h"
 #include "Mountain.h"
@@ -8,19 +9,51 @@
 
 namespace mtm {
 
+    /**
+     * (A static template function.)
+     * Checks if a std::map contains the given key. Returns true, if so.
+     * @tparam key_type Type of the map's key field.
+     * @tparam value_type Type of the map's value field.
+     * @param key The key whose existence in the map is checked.
+     * @param map The map to search for the key in.
+     * @return True if the key was found in the map, and false, otherwise.
+     */
     template<typename key_type, typename value_type>
-    bool mapContainsKey(key_type key, map<key_type, value_type> map) {
+    bool mapContainsKey(key_type key, map <key_type, value_type> map) {
         for (std::pair<key_type, value_type> current : map) {
             if (current.first == key) return true;
         }
         return false;
     }
 
-    bool World::hasGroup(const string &group_name) {
-        for (std::pair<string, Clan> current : this->clan_map) {
-            if (current.second.doesContain(group_name)) return true;
+    bool World::hasGroup(cstring group_name) const {
+        for (const std::pair<const string, Clan>& current : this->clan_map) {
+            if (current.first.empty()) continue;
+            const Clan& clan = current.second;
+            if (clan.doesContain(group_name)) return true;
         }
         return false;
+    }
+
+    const GroupPointer& World::getGroup(cstring group_name) const {
+        for (const std::pair<const string, Clan>& current : this->clan_map) {
+            if (current.first.empty()) continue;
+            const Clan& clan = current.second;
+            if (clan.doesContain(group_name)) {
+                return clan.getGroup(group_name);
+            }
+        }
+        throw WorldGroupNotFound();
+    }
+
+    const string World::getGroupArea(cstring group_name) const {
+        for (const std::pair<const string, AreaPtr>& current : this->area_map) {
+            const AreaPtr& area = current.second;
+            if (area->getGroupsNames().contains(group_name)) {
+                return current.first;
+            }
+        }
+        return "";
     }
 
     /**
@@ -31,6 +64,11 @@ namespace mtm {
      *  given name.
      */
     void World::addClan(cstring new_clan) {
+        /* DISCLAIMER:
+         * This function allows names of emptied clans (united or lost in fight)
+         * to be reused. Although this contradicts the comments above, this is
+         * based on a discussion in the forum. Thread ID in forum: 405278.
+         */
         if (new_clan.empty()) throw WorldInvalidArgument();
         if (mapContainsKey<string, Clan>(new_clan, this->clan_map)) {
             throw WorldClanNameIsTaken();
@@ -48,15 +86,18 @@ namespace mtm {
      */
     void World::addArea(cstring area_name, AreaType type) {
         if (area_name.empty()) throw WorldInvalidArgument();
-        if (mapContainsKey<string, Area>(area_name, this->area_map)) {
+        if (mapContainsKey<string, AreaPtr>(area_name, this->area_map)) {
             throw WorldAreaNameIsTaken();
         }
         if (type == PLAIN) {
-            area_map.insert(std::pair(area_name, Plain(area_name)));
+            area_map.insert(std::pair<string, AreaPtr>
+                                (area_name, AreaPtr(new Plain(area_name))));
         } else if (type == MOUNTAIN) {
-            area_map.insert(std::pair(area_name, Mountain(area_name)));
+            area_map.insert(std::pair<string, AreaPtr>
+                                (area_name, AreaPtr(new Mountain(area_name))));
         } else { // type == RIVER
-            area_map.insert(std::pair(area_name, River(area_name)));
+            area_map.insert(std::pair<string, AreaPtr>
+                                (area_name, AreaPtr(new River(area_name))));
         }
     }
 
@@ -87,15 +128,16 @@ namespace mtm {
             if (!mapContainsKey<string, Clan>(clan_name, this->clan_map)) {
                 throw WorldClanNotFound();
             }
-            if (!mapContainsKey<string, Area>(area_name, this->area_map)) {
+            if (!mapContainsKey<string, AreaPtr>(area_name, this->area_map)) {
                 throw WorldAreaNotFound();
             }
             clan_map.at(clan_name).addGroup(new_group);
-            area_map.at(area_name).groupArrive(group_name,clan_name,clan_map);
+            area_map.at(area_name)->groupArrive(group_name,clan_name,clan_map);
         } catch (const GroupInvalidArgs& groupInvalidArgs) {
             throw WorldInvalidArgument();
         } catch (...) {
-            // catches WorldGroupNameIsTaken, WorldClanNotFound, WorldAreaNotFound
+            // this catches WorldGroupNameIsTaken, WorldClanNotFound,
+            //  WorldAreaNotFound
             throw;
         }
     }
@@ -112,8 +154,8 @@ namespace mtm {
      */
     void World::makeReachable(cstring from, cstring to) {
         try {
-            Area& areaFrom = area_map.at(from);
-            Area& areaTo = area_map.at(to);
+            Area& areaFrom = *area_map.at(from);
+            Area& areaTo = *area_map.at(to);
             areaFrom.addReachableArea(to);
         } catch (const std::out_of_range& oor) {
             throw WorldAreaNotFound();
@@ -134,7 +176,28 @@ namespace mtm {
      *  reachable from the area the group is currently in.
      */
     void World::moveGroup(cstring group_name, cstring destination) {
-
+        try {
+            if (group_name.empty() || !this->hasGroup(group_name)) {
+                throw WorldGroupNotFound();
+            }
+            if (!mapContainsKey<string, AreaPtr>(destination, area_map)) {
+                throw WorldAreaNotFound();
+            }
+            Area &dest_area = *area_map.at(destination);
+            if(dest_area.getGroupsNames().contains(group_name)){
+                throw WorldGroupAlreadyInArea();
+            }
+            Area &group_area = *area_map.at(getGroupArea(group_name));
+            if (!group_area.isReachable(destination)) {
+                throw WorldAreaNotReachable();
+            }
+            const GroupPointer &group = this->getGroup(group_name);
+            group_area.groupLeave(group_name);
+            dest_area.groupArrive(group_name, group->getClan(), clan_map);
+        } catch (const std::out_of_range& oor) {
+            // The group was originally in an illegal area (in another world?)
+            throw WorldAreaNotReachable();
+        }
     }
 
     /**
@@ -145,7 +208,10 @@ namespace mtm {
      * the world.
      */
     void World::makeFriends(cstring clan1, cstring clan2) {
-
+        if(!mapContainsKey(clan1,clan_map) || !mapContainsKey(clan2,clan_map)){
+            throw WorldClanNotFound();
+        }
+        clan_map.at(clan1).makeFriend(clan_map.at(clan2));
     }
 
     /**
@@ -160,7 +226,24 @@ namespace mtm {
      */
     void World::uniteClans(cstring clan1, cstring clan2, const
     string &new_name) {
-
+        if (new_name.empty()) throw WorldInvalidArgument();
+        if (clan1 == clan2) throw WorldInvalidArgument(); // based on forum
+        if (new_name != clan1 && new_name != clan2 &&
+                mapContainsKey(new_name, clan_map)) {
+            throw WorldClanNameIsTaken();
+        }
+        if(!mapContainsKey(clan1,clan_map) || !mapContainsKey(clan2,clan_map)){
+            throw WorldClanNotFound();
+        }
+        Clan& given_clan1 = clan_map.at(clan1);
+        Clan& given_clan2 = clan_map.at(clan2);
+        Clan united(given_clan1.unite(given_clan2, new_name));
+        
+        // To change the key of the new clan, we remove the two old keys,
+        // and add a new one.
+        clan_map.erase(clan1);
+        clan_map.erase(clan2);
+        clan_map.insert(std::pair<string, Clan>(new_name, united));
     }
 
     /**
@@ -175,7 +258,13 @@ namespace mtm {
      *  the given name.
      */
     void World::printGroup(std::ostream &os, cstring group_name) const {
-
+        try {
+            const GroupPointer& group = this->getGroup(group_name);
+            os << *group << "Group's current area: "
+               << this->getGroupArea(group_name) << std::endl;
+        } catch (const WorldGroupNotFound& worldGroupNotFound) {
+            throw WorldGroupNotFound(); // make this function the source
+        }
     }
 
     /**
@@ -186,6 +275,11 @@ namespace mtm {
      *  in the world.
      */
     void World::printClan(std::ostream &os, cstring clan_name) const {
-
+        try {
+            const Clan& clan = clan_map.at(clan_name);
+            os << clan;
+        } catch(const std::out_of_range& oor) {
+            throw WorldClanNotFound();
+        }
     }
 }

@@ -1,7 +1,3 @@
-//
-// Created by Noor Athamnah on 1/17/2018.
-//
-
 #include <iostream>
 #include "Group.h" /* includes string and ostream */
 #include "exceptions.h"
@@ -35,8 +31,8 @@ namespace mtm {
 
     Group::Group(const std::string &name, const std::string &clan, int children,
                  int adults, int tools, int food, int morale) {
-        if (name.empty() || adults < 0 || children < 0
-            || tools < 0 || food < 0 || morale < MORALE_MIN || morale > MORALE_MAX) {
+        if (name.empty() || adults < 0 || children < 0 || tools < 0 || food < 0
+            || morale < MORALE_MIN || morale > MORALE_MAX) {
             throw GroupInvalidArgs();
         }
         if (adults == 0 && children == 0) throw GroupInvalidArgs();
@@ -64,7 +60,7 @@ namespace mtm {
      *  invalid, or both adults and children are 0.
      */
     Group::Group(const std::string &name, int children, int adults) {
-        if (name.empty() || children < 0 || adults < 0) throw GroupInvalidArgs();
+        if (name.empty() || children<0 || adults<0) throw GroupInvalidArgs();
         if (adults == 0 && children == 0)
             throw GroupInvalidArgs();
         this->name = name;
@@ -118,7 +114,6 @@ namespace mtm {
      * floor: 0.5 -> 0, 1.5 -> 1 etc...
      * @param clan The name of the new clan that the groups will belong to.
      */
-    //!!!!! Maybe should check the application for floor thing!!!!!
     void Group::changeClan(const std::string &clan) {
         if (this->clan == clan) return;
         if (!this->clan.empty()) {
@@ -251,7 +246,7 @@ namespace mtm {
         this->food += other.food;
         this->tools += other.tools;
         int morale_total = this->morale * size_this + other.morale * size_other;
-        double morale_new = double(morale_total) / double(size_other + size_this);
+        double morale_new = double(morale_total) / double(size_other+size_this);
         this->morale = int(morale_new);
         other.clearGroup();
         return true;
@@ -321,33 +316,33 @@ namespace mtm {
         if ((this->getSize()==0) || (opponent.getSize() == 0)){
             throw GroupCantFightEmptyGroup();
         }
-        if (*this == opponent) return DRAW;
-        else if (*this > opponent){ //This group wins
+        if (*this == opponent) {
+            return DRAW;
+        } else if (*this > opponent){ //This group wins
             this->handleFight(opponent);
             if(this->getPower()==0) this->clearGroup();
-            if(opponent.getPower()==0) this->clearGroup();
+            if(opponent.getPower()==0) opponent.clearGroup();
             return WON;
-        }
-        else {
+        } else {
             opponent.handleFight(*this);
             if(this->getPower()==0) this->clearGroup();
-            if(opponent.getPower()==0) this->clearGroup();
+            if(opponent.getPower()==0) opponent.clearGroup();
             return LOST;
         }
     }
 
     /**
-        * Clears fields in group.
-        * all numbers become 0, all strings become empty.
-        */
+    * Clears fields in group.
+    * all numbers become 0, all strings become empty.
+    */
     void Group::clearGroup(){
+        this->name = "";
+        this->clan = "";
         this->children = 0;
         this->adults = 0;
-        this->food = 0;
         this->tools = 0;
+        this->food = 0;
         this->morale = 0;
-        this->clan = "";
-        this->name = "";
     }
 
     /**

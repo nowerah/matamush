@@ -1,7 +1,7 @@
-#include "Clan.h"
-#include "exceptions.h"
-#include "testMacros.h"
-#include "Group.h"
+#include "../Clan.h"
+#include "../exceptions.h"
+#include "../testMacros.h"
+#include "../Group.h"
 
 using namespace mtm;
 

@@ -24,7 +24,10 @@ namespace mtm {
             const GroupPointer& group = group_clan.getGroup(group_name);
             this->sortByStrongest();
             for (const GroupPointer& current : this->groups) {
-                if (!group_clan.isFriend(clan_map.at(current->getClan()))) continue;
+                if (current->getSize() == 0) continue;
+                if (!group_clan.isFriend(clan_map.at(current->getClan()))) {
+                    continue;
+                }
                 if (current->trade(*group)) break;
             }
             this->groups.push_back(group);

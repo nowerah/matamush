@@ -46,6 +46,7 @@ namespace mtm {
                 bool success = false;
                 this->sortByStrongest();
                 for (const GroupPointer& current : this->groups) {
+                    if (current->getSize() == 0) continue;
                     if (current->getClan() != clan) continue;
                     if (current->unite(*group, clan_size / 3)) {
                         success = true;

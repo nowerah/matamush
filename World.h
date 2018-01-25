@@ -13,9 +13,26 @@ namespace mtm{
     
     class World{
         map<string, Clan> clan_map;
-        map<string, Area> area_map;
+        map<string, AreaPtr> area_map;
 
-        bool hasGroup(cstring group_name);
+        /**
+         * Checks if any of the World's Areas contain the given group.
+         */
+        bool hasGroup(cstring group_name) const;
+
+        /**
+         * Returns a shared pointer to the group whose name is given.
+         * The group is found by looking in all clans of the world.
+         * @return shared pointer to the group
+         * @throws WorldGroupNotFound if group was not found
+         */
+        const GroupPointer& getGroup(cstring group_name) const;
+
+        /**
+         * Searches for the group in all the World's Areas.
+         * @return name of Area the group is in, or empty string, if not found
+         */
+        const string getGroupArea(cstring group_name) const;
         
     public:
         /**

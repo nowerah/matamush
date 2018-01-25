@@ -59,7 +59,7 @@ namespace mtm{
         /**
          * Copy constructor.
          */
-        Clan(const Clan& other) = default;
+        Clan(const Clan& other);
 
         /**
          * Disable assignment operator
