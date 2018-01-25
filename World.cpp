@@ -155,9 +155,11 @@ namespace mtm {
     void World::makeReachable(cstring from, cstring to) {
         try {
             Area& areaFrom = *area_map.at(from);
-            Area& areaTo = *area_map.at(to);
+            if (!mapContainsKey<string, AreaPtr>(to, area_map)) {
+                throw WorldAreaNotFound();
+            }
             areaFrom.addReachableArea(to);
-        } catch (const std::out_of_range& oor) {
+        } catch (...) {
             throw WorldAreaNotFound();
         }
     }
